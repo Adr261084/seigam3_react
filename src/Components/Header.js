@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Link, useNavigate} from "react-router-dom";
+import swal from "sweetalert";
 
 const Header = () => {
     const navigate = useNavigate();
@@ -7,10 +8,16 @@ const Header = () => {
     const [opcion, setOpcion] = useState();
 
     useEffect (() => {
-        setOpcion("Login")
-      var logueado = localStorage.getItem("token") || "";
+      setOpcion("Login")
+      var logueado = sessionStorage.getItem("token") || "";
       if (logueado === "") {
-          navigate("/login");
+          var path = sessionStorage.getItem("PATH") || "";
+          if (path != "CREAR_CUENTA"){
+              console.log(sessionStorage.getItem("PATH"))
+            navigate("/login");
+          } else {
+              console.log("No es crear cuenta")
+          }
       } else {
           setOpcion("Cerrar sesion")
       }
@@ -18,7 +25,7 @@ const Header = () => {
 
     const onClick = (evento) => {
         evento.preventDefault();
-        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
         navigate("/login");
     };
 
@@ -29,6 +36,9 @@ const Header = () => {
                     Sigam 3
                 </h2>
             </div>
+            <h2 className="text-2xl text-gray-200 font-bold text-center mb-5 md:mb-0 hover:text-gray-100 ">
+                {sessionStorage.getItem('token') || ''}
+            </h2>
                 <div >
                 <Link to="/" className="py-2 px-5 text-blue-900 text-xl border-2 rounded bg-gray-300 hover:bg-gray-400 hover:cursor-pointer">Home</Link>
                     <span className="px-3"></span>

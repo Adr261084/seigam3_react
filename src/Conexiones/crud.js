@@ -7,39 +7,26 @@ class crud {
 
         var myHeaders = new Headers();
         myHeaders.append('Content-Type', 'application/json');
-        myHeaders.append('Authorization', `Basic ${base64.encode(auth.user + ":" + auth.password)}`);
-        myHeaders.append('Access-Control-Allow-Origin', '*');
+        myHeaders.append('x-pass', `${base64.encode(auth.password)}`);
 
         var requestOptions = {
             method: 'GET',
-            mode: 'cors',
-            headers: myHeaders,
-            credentials: 'include'
+            headers: myHeaders
         };
 
         const url = `${back.api.baseURL}${resource}${auth.user}`;
-        console.log(url);
-        console.log(requestOptions.headers.get('Authorization'))
 
-        const response = await (fetch(url, requestOptions));
-        console.log(response);
-        return response.body || 'X';
+        const response = await (fetch(url, requestOptions).then(response => response.json()));
+        //console.log(response.sigam3_login_Name_R || 'X');
+        return response.sigam3_login_Name_R.NOMBRES || 'Error';
     }
 
     async GET(resource) {
-        const token = localStorage.getItem("token");
-        let bearer;
-        if (token === " ") {
-            bearer = " ";
-        } else {
-            bearer = `${token}`
-        }
 
         const data = {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'x-auth-token': bearer
             }
         }
         const url = `${back.api.baseURL}${resource}`;
@@ -49,74 +36,59 @@ class crud {
 
     async POST(resource, body) {
 
-        const token = localStorage.getItem("token");
-        let bearer;
-        if (token === " ") {
-            bearer = " ";
-        } else {
-            bearer = `${token}`
+        const data = {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: {
+                'Content-Type': 'application/json'
+            }
         }
+        const url = `${back.api.baseURL}${resource}`;
+        let response = await (await fetch(url, data)).json();
+        return response;
+    }
+
+    async POST_reg(resource, body) {
 
         const data = {
             method: 'POST',
             body: JSON.stringify(body),
             headers: {
-                'Content-Type': 'application/json',
-                'x-auth-token': bearer
+                'Content-Type': 'application/json'
             }
         }
+        console.log(data);
         const url = `${back.api.baseURL}${resource}`;
         let response = (await (await fetch(url, data)).json());
-        return response;
+        console.log(response.sigam3_crear_usuario_Crear_R[0].TEXT);
+        return response.sigam3_crear_usuario_Crear_R[0].TEXT;
     }
 
     async PUT(resource, body) {
 
-        const token = localStorage.getItem("token");
-        let bearer;
-        if (token === " ") {
-            bearer = " ";
-        } else {
-            bearer = `${token}`
-        }
         const data = {
             method: 'PUT',
             body: JSON.stringify(body),
             headers: {
-                'Content-Type': 'application/json',
-                'x-auth-token': bearer
+                'Content-Type': 'application/json'
             }
         }
         const url = `${back.api.baseURL}${resource}`;
 
-        let response = (await (await fetch(url, data)).json());
+        let response = (await (await fetch(url, data)).status);
         return response;
     }
 
     async DELETE(resource) {
-        const token = localStorage.getItem("token");
-        let bearer;
-        if (token === " ") {
-            bearer = " ";
-        } else {
-            bearer = `${token}`
-        }
-
         const data = {
             method: 'DELETE',
-            headers: {
-                'x-auth-token': bearer
-            }
         }
         const url = `${back.api.baseURL}${resource}`;
         console.log("CRUD DELETE");
         console.log(url);
         console.log(resource);
-        let response = (await (await fetch(url, data)).json());
-        return response;
+        return (await (await fetch(url, data)).json());
     }
 }
 
-export default new
-
-crud();
+export default new crud();

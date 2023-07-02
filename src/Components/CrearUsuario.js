@@ -3,15 +3,17 @@ import Header from "./Header";
 import {Link, useNavigate} from "react-router-dom";
 import swal from "sweetalert";
 import crud from "../Conexiones/crud";
+import base64 from "base-64";
 
-const Login = () => {
+const CrearUsuario = () => {
 
     const navigate = useNavigate();
+
     const [usuario, setUsuario] = useState({
-        user: '', password: ''
+        user: '', password: '', passwordConf: ''
     });
-    const {user, password} = usuario;
     const [isLoading, setIsLoading] = useState(false);
+    const {user, password, passwordConf} = usuario;
 
     const onChange = (event) => {
         setUsuario({
@@ -19,55 +21,58 @@ const Login = () => {
         });
     }
 
-    const autenticarUsuario = async () => {
+    const registrarUsuario = async () => {
         setIsLoading(true);
-        const data = {
-            user: usuario.user, password: usuario.password
-        }
-        const response = await crud.GET_Init(`/sigam3_login/?usuario=`, data);
-        var error = response.substring(0, 5);
-        if (error === 'Error') {
-            const mensaje = response;
+        if (usuario.password === usuario.passwordConf) {
+            const data = {
+                user: usuario.user, pass: base64.encode(usuario.password)
+            }
+            const response = await crud.POST_reg(`/sigam3_crear_usuario`, data);
+            var error = response.substring(0, 5);
+            console.log(error);
+            if (error === 'Error') {
+                const mensaje = response;
+                sessionStorage.removeItem('token');
+                swal({
+                    title: 'error', text: mensaje, icon: 'error', buttons: {
+                        confirm: {
+                            text: 'Error', value: true, visible: true, className: 'btn btn-danger', closeModal: true
+                        }
+                    }
+                });
+            } else {
+                const mensaje = "Felicitaciones " + response;
+                swal({
+                    title: 'Exito', text: mensaje, icon: 'success', buttons: {
+                        confirm: {
+                            text: 'Ok', value: true, visible: true, className: 'btn btn-primary', closeModal: true
+                        }
+                    }
+                });
+                navigate("/login");
+            }
+        } else {
+            const mensaje = 'Confirmación de password no coincidente';
             sessionStorage.removeItem('token');
             swal({
-                title: 'Error', text: mensaje, icon: 'error', buttons: {
+                title: 'error', text: mensaje, icon: 'error', buttons: {
                     confirm: {
-                        text: 'Ok', value: true, visible: true, className: 'btn btn-danger', closeModal: true
+                        text: 'Error', value: true, visible: true, className: 'btn btn-danger', closeModal: true
                     }
                 }
             });
-        } else {
-            sessionStorage.setItem('token', response);
-            const mensaje = "Bienvenido " + response;
-            swal({
-                title: 'Saludo', text: mensaje, icon: 'success', buttons: {
-                    confirm: {
-                        text: 'Ok', value: true, visible: true, className: 'btn btn-primary', closeModal: true
-                    }
-                }
-            });
-            navigate("/");
         }
         setIsLoading(false);
     }
 
     const onSubmit = (evento) => {
         evento.preventDefault();
-        autenticarUsuario();
+        registrarUsuario();
     }
 
     useLayoutEffect(() => {
-        sessionStorage.setItem("PATH", "LOGIN");
+        sessionStorage.setItem("PATH", "CREAR_CUENTA");
     }, [])
-
-    useEffect(() => {
-        const logueado = sessionStorage.getItem("token") || "";
-        if (logueado !== "") {
-            navigate("/");
-        }
-    }, [])
-
-
 
     return (
         <>
@@ -79,13 +84,12 @@ const Login = () => {
                 </div>
             </div>
             <h1 className="text-5xl bg-gray-200 p-5 text-center text-black bold">
-                Bienvenido al sistema de gestion de ambientes
+                Aqui puedes registrar tu usuario como administrador de la configuracion
             </h1>
             <div className="md:flex md:min-h-screen justify-center text-center">
                 <form
                     onSubmit={onSubmit}
-                    className="my-10 bg-white shadow-orange-500 rounded-lg p-10"
-                >
+                    className="my-10 bg-white shadow-orange-500 rounded-lg p-10">
                     <div className="my-5">
                         <label className="uppercase text-gray-600 block text-xl font-bold">Usuario
                         </label>
@@ -107,24 +111,33 @@ const Login = () => {
                                required
                         />
                         <br/>
+                        <input type="password"
+                               placeholder="Confirmar password"
+                               id="passwordConf"
+                               name="passwordConf"
+                               value={passwordConf}
+                               onChange={onChange}
+                               className="w-full mt-3 p-3 rounded-lg bg-gray-50"
+                               required
+                        />
+                        <br/>
                         <input
                             type="submit"
-                            value="Iniciar Sesión"
+                            value="Registrar Usuario"
                             className="bg-gray-600 mb-5 w-full py-3 text-white
                             uppercase font-bold rounded hover:cursor-pointer
                             hover:bg-blue-400 transition-colors"
                         />
                         <Link
-                            to={"/registrar-usuario"}
-                            className="block text-center my-5 text-blue-600 uppercase text-sm hover:text-black text-2xl"
-                        >Crear Usuario en Sigam3</Link>
+                            to={"/login"}
+                            className="block text-center my-5 text-blue-600 uppercase text-sm hover:text-black"
+                        >Regresar
+                        </Link>
                     </div>
                 </form>
             </div>
-
-
         </>
     );
 }
 
-export default Login;
+export default CrearUsuario;
