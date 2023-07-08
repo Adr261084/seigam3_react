@@ -41,10 +41,7 @@ const Requerimiento = () => {
     const [listaProgramas, setListaProgramas] = useState([]);
     const [listaEntidades, setListaEntidades] = useState([]);
     const [itemsSeleccionados, setItemsSeleccionados] = useState(0);
-
-
     const [estado, setEstado] = useState(paramConf.estado);
-
     const [estadoRB, setEstadoRB] = useState(estado);
     const [origenRB, setOrigenRB] = useState("DES");
     const [destinoRB, setDestinoRB] = useState("SOP");
@@ -58,29 +55,27 @@ const Requerimiento = () => {
     const onDestinoChange = evento => {
         setDestinoRB(evento.target.value);
     }
-
     function onClickRegresar() {
         navigate('/');
     }
-
     async function cargarProgramas() {
         const data = {
             sistema: selSistema,
             version: selVersion,
             requerimiento: selRequerimiento
         }
-        await crud.POST('/listarProgramas', data)
+        await crud.POST('/listarProgramas_', data)
             .then(response => response)
             .then(data => {
-                const respProgramas = data.listarProgramas_Programas_R;
+                const respProgramas = data.listarProgramas__Programas_R;
                 for (let i = 0; i < respProgramas.length; i++) {
                     setListaProgramas(listaProgramas => [...listaProgramas, {
-                        PROGRAMA: respProgramas[i].PROPRO,
-                        DESCRIPCION: respProgramas[i].PRODES,
-                        TIPO_1: respProgramas[i].PROCOD,
-                        TIPO_2: respProgramas[i].PROTIP,
-                        TIENE_PANTALLA: respProgramas[i].PROIN2,
-                        PANTALLA: respProgramas[i].PRONO1,
+                        PROGRAMA: respProgramas[i].FUENTE_,
+                        DESCRIPCION: respProgramas[i].NOMBRE_,
+                        EXTENSION: respProgramas[i].EXTENSION_,
+                        ORIGEN: respProgramas[i].SOURCE_,
+                        TIENE_PANTALLA: ' ',
+                        PANTALLA: respProgramas[i].PANTALLA_,
                         SELECCIONADO: false
                     }]);
                 }
@@ -98,17 +93,20 @@ const Requerimiento = () => {
             version: selVersion,
             requerimiento: selRequerimiento
         }
-        await crud.POST('/listarEntidades', data)
+        await crud.POST('/listarEntidades_', data)
             .then(response => response)
             .then(data => {
-                const respEntidades = data.listarEntidades_Entidades_R;
+                const respEntidades = data.listarEntidades__Entidades_R;
                 for (let i = 0; i < respEntidades.length; i++) {
                     setListaEntidades(listaEntidades => [...listaEntidades, {
-                        ENTIDAD: respEntidades[i].ENTENT,
-                        DESCRIPCION: respEntidades[i].ENTDES,
-                        JOURNAL: respEntidades[i].ENTR10,
-                        ENTREGA: respEntidades[i].ENTFUE,
-                        TIPO: respEntidades[i].ENTCOD,
+                        ENTIDAD: respEntidades[i].FUENTE_,
+                        TIPO_ENTIDAD: respEntidades[i].TIPNOM,
+                        ORIGEN: respEntidades[i].SOURCE_,
+                        EXTENSION: respEntidades[i].EXTENSION_,
+                        DESCRIPCION: respEntidades[i].NOMBRE_,
+                        JOURNAL: respEntidades[i].JOURNAL_,
+
+
                         SELECCIONADO: false
                     }]);
                 }
@@ -125,7 +123,7 @@ const Requerimiento = () => {
         evento.preventDefault();
         var estados = ['ENS', 'PAC', 'ENT', 'RCH', 'CER']
         if (!estados.includes(estadoRB) || estado == estadoRB) {
-            var mensaje = '';
+            var mensaje;
             if (!estados.includes(estadoRB)) {
                 mensaje = 'Debe seleccionar nuevo estado';
             } else {
@@ -330,97 +328,68 @@ const Requerimiento = () => {
             });
         } else {
             //Buscar y llamar si hay fuentes entidades
-            var biblioteca = '';
+            var bibliotecaOrigen = '';
+            var bibliotecaDestino = '';
             var consecutivo = 0
             var tipo = ''
+            var pasoListaEntidades = []
             listaPaso.map(
                 (itemPaso) => {
                     if (itemPaso.tipo === 'ENTIDAD') {
                         listaEntidades.map((itemEntidad) => {
                             if (itemEntidad.ENTIDAD === itemPaso.nombre) {
-                                if (itemEntidad.FUENTE === 'F' || itemEntidad.FUENTE === 'A') {
-
-                                }
+                                pasoListaEntidades.push(
+                                    {
+                                        tipo:"E",
+                                        nombre:itemEntidad.ENTIDAD,
+                                        pantalla:"",
+                                        origen:itemEntidad.ORIGEN,
+                                        extension:itemEntidad.EXTENSION,
+                                        journal:itemEntidad.JOURNAL
+                                    }
+                                )
                             }
                         })
                     }
                 }
             );
-            setArrayPaso({
-                biblioteca: biblioteca,
-                listaFuentes: {
-                    archivo: "fuente",
-                    fuentes: []
-                },
-                consecutivoSavf: consecutivo,
-                tipoEntrega: tipo
-            });
-            setIsLoading(true);
-            crud.POST('/crearSavefileOrigen', arrayPaso)
-            setIsLoading(false);
+            var pasoListaProgramas = []
+            listaPaso.map(
+                (itemPaso) => {
+                    if (itemPaso.tipo === 'PROGRAMA') {
+                        listaProgramas.map((itemEntidad) => {
+                            if (itemEntidad.PROGRAMA === itemPaso.nombre) {
+                                pasoListaProgramas.push(
+                                    {
+                                        tipo:"P",
+                                        nombre:itemEntidad.PROGRAMA,
+                                        pantalla:itemEntidad.PANTALLA,
+                                        origen:itemEntidad.ORIGEN,
+                                        extension:itemEntidad.EXTENSION,
+                                        journal:""
+                                    }
+                                )
+                            }
+                        })
+                    }
+                }
+            );
+            console.log(pasoListaProgramas)
+            console.log(pasoListaEntidades)
 
-            //Buscar y llamar si hay fuentes programas
-            var biblioteca = '';
-            var consecutivo = 0
-            var tipo = ''
-            setArrayPaso({
-                BIBLIOTECA: biblioteca,
-                LISTA_FTES: {
-                    FUENTE: []
-                },
-                CONSECUTIVO: consecutivo,
-                TIPO: tipo
-            });
-            setIsLoading(true);
-            crud.POST('/crearSavefileOrigen', arrayPaso)
-            setIsLoading(false);
-            //Buscar y llamar si hay objetos con contenido entidades
-            var biblioteca = '';
-            var consecutivo = 0
-            var tipo = ''
-            setArrayPaso({
-                BIBLIOTECA: biblioteca,
-                LISTA_FTES: {
-                    FUENTE: []
-                },
-                CONSECUTIVO: consecutivo,
-                TIPO: tipo
-            });
-            crud.POST('/crearSavefileOrigen', arrayPaso)
+            var arrayX = pasoListaProgramas.concat(pasoListaEntidades)
+            console.log(arrayX)
 
-            //Buscar y llamar si hay objetos programas
-            var biblioteca = '';
-            var consecutivo = 0
-            var tipo = ''
             setArrayPaso({
-                BIBLIOTECA: biblioteca,
-                LISTA_FTES: {
-                    FUENTE: []
-                },
-                CONSECUTIVO: consecutivo,
-                TIPO: tipo
+                bibliotecaOrigen: bibliotecaOrigen,
+                bibliotecaDestino: bibliotecaDestino,
+                listado : arrayX
             });
-            setIsLoading(true);
-            crud.POST('/crearSavefileOrigen', arrayPaso)
-            setIsLoading(false);
-            //buscar y llamar si hay objetos script
-            var biblioteca = '';
-            var consecutivo = 0
-            var tipo = ''
-            setArrayPaso({
-                BIBLIOTECA: biblioteca,
-                LISTA_FTES: {
-                    FUENTE: []
-                },
-                CONSECUTIVO: consecutivo,
-                TIPO: tipo
-            });
-            crud.POST('/crearSavefileOrigen', arrayPaso)
+            console.log(arrayPaso)
 
-            console.log("<-------->")
-            listaPaso.map((elemento) => {
-                console.log(elemento.tipo, elemento.nombre)
-            })
+            setIsLoading(true);
+            //crud.POST('/crearSavefileOrigen', arrayPaso)
+            setIsLoading(false);
         }
     }
 
@@ -607,7 +576,8 @@ const Requerimiento = () => {
                 <tr>
                     <th className="border border-slate-600 text-xl px-1">Programa</th>
                     <th className="border border-slate-600 text-xl px-1">Pantalla</th>
-                    <th className="border border-slate-600 text-xl px-1">Tipo Programa</th>
+                    <th className="border border-slate-600 text-xl px-1">Origen</th>
+                    <th className="border border-slate-600 text-xl px-1">Extension</th>
                     <th className="border border-slate-600 text-xl px-1">Descripción</th>
                 </tr>
                 </thead>
@@ -635,7 +605,12 @@ const Requerimiento = () => {
                                 </td>
                                 <td className="justify-between text-xl px-1">
                                     <label htmlFor={item.PROGRAMA} className="text-xl px-1">
-                                        {item.TIPO_1}
+                                        {item.ORIGEN}
+                                    </label>
+                                </td>
+                                <td className="justify-between text-xl px-1">
+                                    <label htmlFor={item.PROGRAMA} className="text-xl px-1">
+                                        {item.EXTENSION}
                                     </label>
                                 </td>
                                 <td className="justify-between text-xl px-1">
@@ -662,10 +637,11 @@ const Requerimiento = () => {
                 <thead>
                 <tr>
                     <th className="border border-slate-600 text-xl px-1">Entidad</th>
-                    <th className="border border-slate-600 text-xl px-1">Tipo</th>
-                    <th className="border border-slate-600 text-xl px-1">Entrega</th>
-                    <th className="border border-slate-600 text-xl px-1">Journal</th>
+                    <th className="border border-slate-600 text-xl px-1">Tipo Entidad</th>
+                    <th className="border border-slate-600 text-xl px-1">Origen</th>
+                    <th className="border border-slate-600 text-xl px-1">Extension</th>
                     <th className="border border-slate-600 text-xl px-1">Descripción</th>
+                    <th className="border border-slate-600 text-xl px-1">Journal</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -687,24 +663,27 @@ const Requerimiento = () => {
                                 </td>
                                 <td className="justify-between text-xl px-1">
                                     <label htmlFor={item.ENTIDAD} className="text-xl px-1">
-                                        {item.TIPO}
+                                        {item.TIPO_ENTIDAD}
                                     </label>
                                 </td>
                                 <td className="justify-between text-xl px-1">
                                     <label htmlFor={item.ENTIDAD} className="text-xl px-1">
-                                        {item.ENTREGA}
+                                        {item.ORIGEN}
                                     </label>
-
                                 </td>
                                 <td className="justify-between text-xl px-1">
                                     <label htmlFor={item.ENTIDAD} className="text-xl px-1">
-                                        {item.JOURNAL}
+                                        {item.EXTENSION}
                                     </label>
-
                                 </td>
                                 <td className="justify-between text-xl px-1">
                                     <label htmlFor={item.ENTIDAD} className="text-xl px-1">
                                         {item.DESCRIPCION}
+                                    </label>
+                                </td>
+                                <td className="justify-between text-xl px-1">
+                                    <label htmlFor={item.ENTIDAD} className="text-xl px-1">
+                                        {item.JOURNAL}
                                     </label>
                                 </td>
                             </tr>

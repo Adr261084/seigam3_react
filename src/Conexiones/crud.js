@@ -31,6 +31,7 @@ class crud {
         }
         const url = `${back.api.baseURL}${resource}`;
         let response = await (await fetch(url, data)).json();
+        console.log(response);
         return response;
     }
 
